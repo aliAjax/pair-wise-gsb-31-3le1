@@ -1,5 +1,6 @@
 export enum ItemStatus {
   AVAILABLE = 'available',
+  SWAPPING = 'swapping',
   EXCHANGED = 'exchanged',
   OFFLINE = 'offline',
 }
@@ -13,6 +14,7 @@ export enum ItemCondition {
 
 export const ITEM_STATUS_OPTIONS = [
   { label: '可交换', value: ItemStatus.AVAILABLE },
+  { label: '交换中', value: ItemStatus.SWAPPING },
   { label: '已交换', value: ItemStatus.EXCHANGED },
   { label: '已下架', value: ItemStatus.OFFLINE },
 ];

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { exchangeApi } from '@/api/exchangeApi';
 import { ExchangeStatus } from '@/constants/exchange';
 import type { Exchange, ExchangeDraft } from '@/models/exchange';
+import { exchangeAllItemIds } from '@/models/exchange';
 import { message } from '@/utils/message';
 
 export const useExchangeStore = defineStore('exchanges', {
@@ -18,6 +19,14 @@ export const useExchangeStore = defineStore('exchanges', {
       if (state.statusFilter === 'all') return state.exchanges;
       return state.exchanges.filter((item) => item.status === state.statusFilter);
     },
+    /** 已被已同意方案占用的物品 id（发起组合交换时用来禁用勾选） */
+    occupiedItemIds: (state) => {
+      const ids = new Set<string>();
+      state.exchanges
+        .filter((item) => item.status === ExchangeStatus.ACCEPTED)
+        .forEach((item) => exchangeAllItemIds(item).forEach((id) => ids.add(id)));
+      return ids;
+    },
   },
   actions: {
     async hydrate() {
@@ -29,15 +38,30 @@ export const useExchangeStore = defineStore('exchanges', {
       }
     },
     async create(draft: ExchangeDraft) {
-      const exchange = await exchangeApi.create({ ...draft, status: ExchangeStatus.PENDING });
+      try {
+        const exchange = await exchangeApi.create({ ...draft, status: ExchangeStatus.PENDING });
+        this.exchanges = await exchangeApi.list();
+        message('交换请求已发出', 'success');
+        return exchange;
+      } catch (error) {
+        message(error instanceof Error ? error.message : '交换请求发送失败', 'error');
+        return null;
+      }
+    },
+    async toggleConfirmItem(id: string, itemId: string, confirmed: boolean) {
+      await exchangeApi.setItemConfirmed(id, itemId, confirmed);
       this.exchanges = await exchangeApi.list();
-      message('交换请求已发出', 'success');
-      return exchange;
     },
     async accept(id: string) {
-      await exchangeApi.transition(id, ExchangeStatus.ACCEPTED);
-      this.exchanges = await exchangeApi.list();
-      message('已同意交换', 'success');
+      try {
+        await exchangeApi.transition(id, ExchangeStatus.ACCEPTED);
+        this.exchanges = await exchangeApi.list();
+        message('已同意交换，涉及物品进入交换中', 'success');
+        return true;
+      } catch (error) {
+        message(error instanceof Error ? error.message : '操作失败', 'error');
+        return false;
+      }
     },
     async reject(id: string) {
       await exchangeApi.transition(id, ExchangeStatus.REJECTED);

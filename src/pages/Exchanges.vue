@@ -11,6 +11,7 @@
       <span>全部 {{ stats.total }}</span>
       <span>待确认 {{ stats.pending }}</span>
       <span>已同意 {{ stats.accepted }}</span>
+      <span>已另行达成 {{ stats.superseded }}</span>
       <span>已完成 {{ stats.completed }}</span>
     </div>
 
@@ -32,9 +33,10 @@
         :exchange="exchange"
         :items="itemStore.items"
         :users="authStore.users"
-        @accept="exchangeStore.accept"
+        @accept="acceptExchange"
         @reject="exchangeStore.reject"
         @complete="completeExchange"
+        @toggle-confirm="exchangeStore.toggleConfirmItem"
       />
     </div>
     <EmptyState
@@ -73,9 +75,14 @@ const mine = computed(() => {
 const visibleExchanges = computed(() => mine.value);
 const stats = useExchangeStats(() => exchangeStore.exchanges);
 
+const acceptExchange = async (id: string) => {
+  const ok = await exchangeStore.accept(id);
+  if (ok) await itemStore.hydrate();
+};
+
 const completeExchange = async (id: string) => {
   await exchangeStore.complete(id);
-  itemStore.items = itemStore.items.map((item) => item);
+  await itemStore.hydrate();
 };
 
 void ExchangeStatus.PENDING;
