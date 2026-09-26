@@ -12,6 +12,7 @@
       <span>待确认 {{ stats.pending }}</span>
       <span>已同意 {{ stats.accepted }}</span>
       <span>已完成 {{ stats.completed }}</span>
+      <span>已另行达成 {{ stats.elsewhere }}</span>
     </div>
 
     <div class="segmented">
@@ -32,7 +33,7 @@
         :exchange="exchange"
         :items="itemStore.items"
         :users="authStore.users"
-        @accept="exchangeStore.accept"
+        @accept="acceptExchange"
         @reject="exchangeStore.reject"
         @complete="completeExchange"
       />
@@ -73,9 +74,16 @@ const mine = computed(() => {
 const visibleExchanges = computed(() => mine.value);
 const stats = useExchangeStats(() => exchangeStore.exchanges);
 
+const acceptExchange = async (id: string) => {
+  await exchangeStore.accept(id);
+  // 答应后整组物品进入交换中，同步物品状态
+  await itemStore.hydrate();
+};
+
 const completeExchange = async (id: string) => {
   await exchangeStore.complete(id);
-  itemStore.items = itemStore.items.map((item) => item);
+  // 完成后整组物品归为已交换，同步物品状态
+  await itemStore.hydrate();
 };
 
 void ExchangeStatus.PENDING;

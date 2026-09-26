@@ -15,10 +15,19 @@ ReSwap 是一个纯前端以物换物 Web 应用。用户可以本地模拟登�
 
 - 首页瀑布流浏览、分类筛选、关键词搜索。
 - 物品详情、物主资料、选择自己的物品发起交换。
+- 组合交换：一次勾 1-3 件自己的可交换物品换一件心仪物品，物主逐件确认后整组答应或拒绝。
 - 发布物品，支持本地 base64 图片上传、分类和成色选择。
 - 交换管理，区分我发起的和我收到的请求，支持同意、拒绝、完成。
 - 个人中心，编辑资料、上传头像、查看我发布的物品。
 - 主题切换、全局错误处理和 Vant 提示。
+
+## 组合交换规则
+
+- 发起时最多勾 3 件自己的可交换物品（`EXCHANGE_BUNDLE_MAX`），组里有一件已被别的方案占用（已同意方案锁定或状态不可交换）就发不出去，报错和列表标注都会指出哪件。
+- 物主在交换卡片上逐件勾选确认组内物品，全部确认后才能整组答应；拒绝不受确认限制，整组生效。
+- 答应后组内物品和换来的那件一起进入「交换中」（`ItemStatus.EXCHANGING`），盯上这些物品的其他待确认请求自动标为「已另行达成」（`ExchangeStatus.ELSEWHERE`）。
+- 完成时整组物品一起归为「已交换」。
+- 旧的单件请求（无 `from_item_ids` 字段）通过 `models/exchange.ts` 的 `exchangeFromItemIds` 回退兼容，照旧能打开和处理。
 
 ## 启动与构建
 
@@ -82,6 +91,8 @@ src/
 
 定义位置：`src/constants/item.ts`
 
+值：AVAILABLE = 'available'（可交换）、EXCHANGING = 'exchanging'（交换中）、EXCHANGED = 'exchanged'（已交换）、OFFLINE = 'offline'（已下架）
+
 出现位置：
 
 - `src/models/item.ts`
@@ -99,6 +110,8 @@ src/
 ### ExchangeStatus
 
 定义位置：`src/constants/exchange.ts`
+
+值：PENDING = 'pending'（待确认）、ACCEPTED = 'accepted'（已同意）、REJECTED = 'rejected'（已拒绝）、COMPLETED = 'completed'（已完成）、ELSEWHERE = 'elsewhere'（已另行达成）
 
 出现位置：
 

@@ -41,6 +41,18 @@ const seedItems: Item[] = [
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
   },
   {
+    id: 'item_keyboard',
+    user_id: 'user_me',
+    title: '蓝牙机械键盘',
+    description: '青轴手感脆，换过一套键帽，可搭配其他物品组合交换。',
+    category: '数码',
+    condition: ItemCondition.GOOD,
+    images: [],
+    status: ItemStatus.AVAILABLE,
+    location: '上海 · 徐汇',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+  },
+  {
     id: 'item_lamp',
     user_id: 'user_lin',
     title: '木质小夜灯',
